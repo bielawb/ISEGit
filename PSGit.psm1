@@ -121,7 +121,8 @@ function Checkpoint-GitProject {
 param (
     [Parameter(
         ParameterSetName = 'byName',
-        Mandatory = $true
+        Mandatory = $true,
+        Position = 0
     )]
     [string]$Name,
     [ValidateScript({
@@ -137,7 +138,9 @@ param (
     )]
     [switch]$All,
     [Parameter(
-        ValueFromRemainingArguments = $true
+        ValueFromRemainingArguments = $true,
+        Position = 1
+        
     )]
     $Message
 )
@@ -167,7 +170,7 @@ param (
     if ($Name) {
         & $commit -Name $Name -Path $Path -Message $Message -ErrorVariable Commiting -ErrorAction SilentlyContinue
     } else {
-        & $add -All -Path $Path -Message $Message -ErrorVariable Commiting -ErrorAction SilentlyContinue
+        & $commit -All -Path $Path -Message $Message -ErrorVariable Commiting -ErrorAction SilentlyContinue
     }
 
     if ($Commiting) {
@@ -181,3 +184,5 @@ Couldn't add file(s): {0} to {1}: "{2}"
 }
 
 New-Alias -Name Commit-GitProject -Value Checkpoint-GitProject
+
+Export-ModuleMember -Function * -Alias *
