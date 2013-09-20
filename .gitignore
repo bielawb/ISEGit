@@ -1,0 +1,6 @@
+*
+!*.ps?1
+!*.ps1*
+!*.help.txt
+!*.xaml
+!.gitignore

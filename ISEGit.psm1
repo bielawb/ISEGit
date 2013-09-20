@@ -101,6 +101,30 @@ function Get-ISEGitStatus {
     }
 }
 
+function Add-GitMenuItem {
+param (
+    [string]$DisplayName,
+    [scriptblock]$ScriptBlock,
+    [string]$Key
+)
+
+    if (-not ($Menu.Submenus | where { $_.DisplayName -eq $DisplayName })) {
+        try {
+            $Menu.Submenus.Add(
+                $DisplayName,
+                $ScriptBlock,
+                $Key
+            )
+        } catch {
+            $Menu.Submenus.Add(
+                $DisplayName,
+                $ScriptBlock,
+                $null
+            )
+        }
+    }
+}
+
 function Add-ISEGitItem {
     $Data  = Resolve-IsePath -Child
     if ($Data.Path) {
@@ -110,60 +134,26 @@ function Add-ISEGitItem {
 
 function Checkpoint-ISEGitProject {
     $Data = Resolve-IsePath -Child
-    $Message = Get-IseInput -Prompt (
-        "Please enter commit message. File(s): {0} Project: {1}" -f $Data.Name, $Data.Path
-    ) -Title "Commit message required!"
     if ($Data.Path) {
+        $Message = Get-IseInput -Prompt (
+            "Please enter commit message. File(s): {0} Project: {1}" -f $Data.Name, $Data.Path
+        ) -Title "Commit message required!"
         Checkpoint-GitProject -Path $Data.Path -Name $Data.Name -Message $Message
     } 
 }
 
-if (-not ($Menu.Submenus | where { $_.DisplayName -eq 'Status' })) {
-    try {
-        $Menu.Submenus.Add(
-            'Status',
-            {Get-ISEGitStatus},
-            'CTRL+SHIFT+S'
-        )
-    } catch {
-        $Menu.Submenus.Add(
-            'Status',
-            {Get-ISEGitStatus},
-            $null
-        )
+function New-ISEGitBranch {
+    $Path = (Resolve-IsePath).Path
+    if ($Path) {
+        $Name = Get-IseInput -Title 'Name of branch needed' -Prompt 'Provide the name for new branch'
+        New-GitBranch -Name $Name -Path $Path
     }
 }
 
-if (-not ($Menu.Submenus | where { $_.DisplayName -eq 'Add' })) {
-    try {
-        $Menu.Submenus.Add(
-            'Add',
-            {Add-ISEGitItem},
-            'CTRL+SHIFT+A'
-        )
-    } catch {
-        $Menu.Submenus.Add(
-            'Add',
-            {Add-ISEGitItem},
-            $null
-        )
-    }
-}
-
-if (-not ($Menu.Submenus | where { $_.DisplayName -eq 'Commit' })) {
-    try {
-        $Menu.Submenus.Add(
-            'Commit',
-            {Checkpoint-ISEGitProject},
-            'CTRL+SHIFT+C'
-        )
-    } catch {
-        $Menu.Submenus.Add(
-            'Commit',
-            {Checkpoint-ISEGitProject},
-            $null
-        )
-    }
-}
+Add-GitMenuItem -DisplayName Status -ScriptBlock {Get-ISEGitStatus} -Key CTRL+SHIFT+S
+Add-GitMenuItem -DisplayName Add -ScriptBlock {Add-ISEGitItem} -Key CTRL+SHIFT+A
+Add-GitMenuItem -DisplayName Commit -ScriptBlock {Checkpoint-ISEGitProject} -Key CTRL+SHIFT+C
+Add-GitMenuItem -DisplayName 'New branch' -ScriptBlock {New-ISEGitBranch} -Key CTRL+SHIFT+B
+Add-GitMenuItem -DisplayName 'Remove branch' -ScriptBlock {Remove-ISEGitBranch} -Key $null
 
 Export-ModuleMember -Function * -Alias *

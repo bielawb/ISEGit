@@ -183,6 +183,44 @@ Couldn't add file(s): {0} to {1}: "{2}"
     }
 }
 
+function New-GitBranch {
+param (
+    [ValidateScript({
+        if (Test-Path -Path $_) {
+            $true
+        } else {
+            throw 'Provide a path to existing directory'
+        }
+    })]
+    [string]$Path,
+    [Parameter(
+        Mandatory = $true
+    )]
+    [string]$Name
+)
+
+    $newbranch = {
+        [CmdletBinding()]
+        param (
+            $Path = '.',
+            $Name
+        )
+        Push-Location $Path
+        git branch $Name
+        Pop-Location
+    }
+
+    & $newbranch -Name $Name -Path $Path -ErrorVariable CreatingBranch -ErrorAction SilentlyContinue
+
+    if ($CreatingBranch) {
+        @'
+Couldn't create new branch: {0} in {1}: "{2}"
+'@ -f $Name, $Path, $CreatingBranch[0].Exception.Message | Write-Warning
+    }
+}
+
+
+
 New-Alias -Name Commit-GitProject -Value Checkpoint-GitProject
 
 Export-ModuleMember -Function * -Alias *
