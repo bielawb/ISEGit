@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-16"?>
+<Configuration>
+<ViewDefinitions>
+<View>
+    <Name>Normal</Name>
+        <ViewSelectedBy>
+        <TypeName>Git.Status</TypeName>
+    </ViewSelectedBy>
+    <TableControl>
+        <TableHeaders>
+            <TableColumnHeader>
+                <Width>10</Width>
+            </TableColumnHeader>
+            <TableColumnHeader>
+                <Width>10</Width>
+            </TableColumnHeader>
+            <TableColumnHeader/>
+        </TableHeaders>
+        <TableRowEntries>
+            <TableRowEntry>
+                <TableColumnItems>
+                    <TableColumnItem>
+                        <PropertyName>Index</PropertyName>
+                    </TableColumnItem>
+                    <TableColumnItem>
+                        <PropertyName>WorkTree</PropertyName>
+                    </TableColumnItem>
+                    <TableColumnItem>
+                        <PropertyName>FileName</PropertyName>
+                    </TableColumnItem>
+                </TableColumnItems>
+            </TableRowEntry>
+        </TableRowEntries>
+    </TableControl>
+</View>
+</ViewDefinitions>
+</Configuration>

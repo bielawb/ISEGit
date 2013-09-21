@@ -4,6 +4,7 @@ if (-not (Get-Alias -Name git -ErrorAction SilentlyContinue)) {
 }
 
 function Get-GitStatus {
+[OutputType('Git.Status')]
 param (
     [ValidateScript({
         if (Test-Path -Path $_) {
@@ -40,7 +41,10 @@ param (
             $clean = $false
             if ($StatusLine -match '^(?<Index>.)(?<WorkTree>.)\s(?<FileName>.*)$') {
                 $Matches.Remove(0)
-                New-Object PSObject -Property $Matches
+                New-Object PSObject -Property $Matches | ForEach-Object {
+                    $_.PSTypeNames.Insert(0,'Git.Status')
+                    $_
+                }
             }
         }
     } 

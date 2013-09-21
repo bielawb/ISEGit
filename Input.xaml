@@ -53,7 +53,7 @@
             Grid.Row="1" 
             Name="Value" 
             Style="{StaticResource Margin}"
-            MaxLines="2" 
+            MaxLines="4" 
             AcceptsReturn="True" 
             SpellCheck.IsEnabled="True" 
             Language="en-US"
@@ -66,8 +66,7 @@
             <AccessText>
                 _OK
             </AccessText>
-
-            </Button>
+        </Button>
         <Button 
             Name="Cancel"
             Grid.Row="1" 
@@ -75,7 +74,6 @@
             <AccessText>
                 _Cancel
             </AccessText>
-    
         </Button>
     </Grid>
 </Window>
