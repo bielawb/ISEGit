@@ -3,12 +3,7 @@ if (-not ($Menu = $psISE.CurrentPowerShellTab.AddOnsMenu.Submenus |
     $Menu = $psISE.CurrentPowerShellTab.AddOnsMenu.Submenus.Add('ISEGit', $null, $null)
 }
 
-if (-not (Get-Alias -Name git -ErrorAction SilentlyContinue)) {
-    $GitPath = Resolve-Path -Path $env:USERPROFILE\AppData\Local\GitHub\*\cmd\git.exe
-    New-Alias -Name git -Value $GitPath.ProviderPath
-}
-
-function Resolve-IsePath {
+function Resolve-ISEPath {
 param (
     [switch]$Child
 )
