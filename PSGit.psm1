@@ -205,21 +205,26 @@ param (
     [Parameter(
         Mandatory = $true
     )]
-    [string]$Name
+    [string]$Name,
+    [switch]$CheckOut
 )
 
     $newbranch = {
         [CmdletBinding()]
         param (
             $Path = '.',
-            $Name
+            $Name,
+            [switch]$CheckOut
         )
         Push-Location $Path
         git branch $Name
+        if ($CheckOut) {
+            git checkout $Name
+        }
         Pop-Location
     }
 
-    & $newbranch -Name $Name -Path $Path -ErrorVariable CreatingBranch -ErrorAction SilentlyContinue
+    & $newbranch -Name $Name -Path $Path -ErrorVariable CreatingBranch -ErrorAction SilentlyContinue -CheckOut:$CheckOut
 
     if ($CreatingBranch) {
         @'
@@ -228,7 +233,121 @@ Couldn't create new branch: {0} in {1}: "{2}"
     }
 }
 
+function Get-GitBranch {
+param (
+    [ValidateScript({
+        if (Test-Path -Path $_) {
+            $true
+        } else {
+            throw 'Provide a path to existing directory'
+        }
+    })]
+    [string]$Path,
+    [Parameter(
+        Mandatory = $true
+    )]
+    [string]$Name
+)
+    $getbranch = {
+        [CmdletBinding()]
+        param (
+            $Path = '.',
+            $Name
+        )
+        Push-Location $Path
+        git branch -a --list $Name
+        Pop-Location
+    }
 
+    & $getbranch -Name $Name -Path $Path -ErrorVariable GettingBranch -ErrorAction SilentlyContinue
+
+    if ($GettingBranch) {
+        @'
+Couldn't find branch: {0} in {1}: "{2}"
+'@ -f $Name, $Path, $GettingBranch[0].Exception.Message | Write-Warning
+    }
+}
+
+function Merge-GitBranch {
+param (
+    [ValidateScript({
+        if (Test-Path -Path $_) {
+            $true
+        } else {
+            throw 'Provide a path to existing directory'
+        }
+    })]
+    [string]$Path,
+    [Parameter(
+        Mandatory = $true
+    )]
+    [string]$Name
+)
+
+    $mergebranch = {
+        [CmdletBinding()]
+        param (
+            $Path = '.',
+            $Name
+        )
+        Push-Location $Path
+        git merge $Name
+        Pop-Location
+    }
+
+    & $mergebranch -Name $Name -Path $Path -ErrorVariable MergingBranch -ErrorAction SilentlyContinue
+
+    if ($mergingBranch) {
+        @'
+Couldn't find branch: {0} in {1}: "{2}"
+'@ -f $Name, $Path, $mergingBranch[0].Exception.Message | Write-Warning
+    }
+}
+
+function Remove-GitBranch {
+param (
+    [ValidateScript({
+        if (Test-Path -Path $_) {
+            $true
+        } else {
+            throw 'Provide a path to existing directory'
+        }
+    })]
+    [string]$Path,
+    [Parameter(
+        Mandatory = $true
+    )]
+    [string]$Name,
+    [switch]$Force
+)
+
+    $removebranch = {
+        [CmdletBinding()]
+        param (
+            $Path = '.',
+            $Name,
+            [switch]$Force
+        )
+
+        if ($Force) {
+            $option = '-D'
+        } else {
+            $option = '-d'
+        }
+
+        Push-Location $Path
+        git branch $Name $option
+        Pop-Location
+    }
+
+    & $removebranch -Name $Name -Path $Path -ErrorVariable RemovingBranch -ErrorAction SilentlyContinue -Force:$Force
+
+    if ($RemovingBranch) {
+        @'
+Couldn't find branch: {0} in {1}: "{2}"
+'@ -f $Name, $Path, $RemovingBranch[0].Exception.Message | Write-Warning
+    }
+}
 
 New-Alias -Name Commit-GitProject -Value Checkpoint-GitProject
 
