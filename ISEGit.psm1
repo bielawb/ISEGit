@@ -175,6 +175,13 @@ param ([switch]$Force)
     }
 }
 
+function Push-ISEGitProject {
+    $Path = (Resolve-IsePath).Path
+    if ($Path) {
+        Push-GitProject -Path $Path   
+    }
+}
+
 Add-GitMenuItem -DisplayName Status -ScriptBlock {Get-ISEGitStatus} -Key CTRL+SHIFT+S
 Add-GitMenuItem -DisplayName Add -ScriptBlock {Add-ISEGitItem} -Key CTRL+SHIFT+A
 Add-GitMenuItem -DisplayName Commit -ScriptBlock {Checkpoint-ISEGitProject} -Key CTRL+SHIFT+C
@@ -183,5 +190,6 @@ Add-GitMenuItem -DisplayName 'Get branches' -ScriptBlock {Get-ISEGitBranch} -Key
 Add-GitMenuItem -DisplayName 'Merge branch' -ScriptBlock {Merge-ISEGitBranch} -Key $null
 Add-GitMenuItem -DisplayName 'Remove branch' -ScriptBlock {Remove-ISEGitBranch} -Key $null
 Add-GitMenuItem -DisplayName 'Remove branch (forced)' -ScriptBlock {Remove-ISEGitBranch -Force} -Key $null
+Add-GitMenuItem -DisplayName Push -ScriptBlock {Push-ISEGitProject} -Key CTRL+SHIFT+P
 
 Export-ModuleMember -Function * -Alias *

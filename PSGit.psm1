@@ -1,7 +1,10 @@
-if (-not (Get-Alias -Name git -ErrorAction SilentlyContinue)) {
-    $GitPath = Resolve-Path -Path $env:USERPROFILE\AppData\Local\GitHub\*\cmd\git.exe
-    New-Alias -Name git -Value $GitPath.ProviderPath
-}
+$CmdPath = (Resolve-Path -Path $env:USERPROFILE\AppData\Local\GitHub\*\cmd).ProviderPath
+$BinPath = (Resolve-Path -Path $env:USERPROFILE\AppData\Local\GitHub\*\bin).ProviderPath
+$GitHubPath = (Resolve-Path -Path $env:USERPROFILE\AppData\Local\Apps\*\*\*\gith*\github.exe |
+        Sort-Object { (Get-Item $_.ProviderPath).VersionInfo.FileVersion } -Descending |
+        Select-Object -First 1).ProviderPath | Split-Path
+
+$env:Path = "$CmdPath;$BinPath;$GitHubPath;$env:Path"
 
 function Get-GitStatus {
 [OutputType('Git.Status')]
@@ -299,7 +302,7 @@ param (
 
     if ($mergingBranch) {
         @'
-Couldn't find branch: {0} in {1}: "{2}"
+Couldn't merge branch: {0} in {1}: "{2}"
 '@ -f $Name, $Path, $mergingBranch[0].Exception.Message | Write-Warning
     }
 }
@@ -344,8 +347,39 @@ param (
 
     if ($RemovingBranch) {
         @'
-Couldn't find branch: {0} in {1}: "{2}"
+Couldn't remove branch: {0} in {1}: "{2}"
 '@ -f $Name, $Path, $RemovingBranch[0].Exception.Message | Write-Warning
+    }
+}
+
+function Push-GitProject {
+param (
+    [ValidateScript({
+        if (Test-Path -Path $_) {
+            $true
+        } else {
+            throw 'Provide a path to existing directory'
+        }
+    })]
+    [string]$Path
+)
+
+    $pushProject = {
+        [CmdletBinding()]
+        param (
+            $Path = '.'
+        )
+        Push-Location $Path
+        git push --quiet --porcelain
+        Pop-Location
+    }
+
+    & $pushProject -Path $Path -ErrorVariable PushingProject -ErrorAction SilentlyContinue
+
+    if ($PushingProject) {
+        @'
+Couldn't push project {1}: "{2}"
+'@ -f $Path, $PushingProject[0].Exception.Message | Write-Warning
     }
 }
 
