@@ -141,7 +141,37 @@ function New-ISEGitBranch {
     $Path = (Resolve-IsePath).Path
     if ($Path) {
         $Name = Get-IseInput -Title 'Name of branch needed' -Prompt 'Provide the name for new branch'
-        New-GitBranch -Name $Name -Path $Path
+        if ($Name) {
+            New-GitBranch -Name $Name -Path $Path
+        }
+    }
+}
+
+function Get-ISEGitBranch {
+    $Path = (Resolve-IsePath).Path
+    if ($Path) {
+        Get-GitBranch -Name * -Path $Path
+    }
+}
+
+function Merge-ISEGitBranch {
+    $Path = (Resolve-IsePath).Path
+    if ($Path) {
+        $Name = Get-IseInput -Title 'Name of branch needed' -Prompt 'Provide the name of the branch to merge'
+        if ($Name) {
+            Merge-GitBranch -Name $Name -Path $Path
+        }
+    }
+}
+
+function Remove-ISEGitBranch {
+param ([switch]$Force)
+    $Path = (Resolve-IsePath).Path
+    if ($Path) {
+        $Name = Get-IseInput -Title 'Name of branch needed' -Prompt 'Provide the name of the branch to be removed'
+        if ($Name) {
+            Remove-GitBranch -Name $Name -Path $Path -Force:$Force
+        }
     }
 }
 
@@ -149,6 +179,9 @@ Add-GitMenuItem -DisplayName Status -ScriptBlock {Get-ISEGitStatus} -Key CTRL+SH
 Add-GitMenuItem -DisplayName Add -ScriptBlock {Add-ISEGitItem} -Key CTRL+SHIFT+A
 Add-GitMenuItem -DisplayName Commit -ScriptBlock {Checkpoint-ISEGitProject} -Key CTRL+SHIFT+C
 Add-GitMenuItem -DisplayName 'New branch' -ScriptBlock {New-ISEGitBranch} -Key CTRL+SHIFT+B
+Add-GitMenuItem -DisplayName 'Get branches' -ScriptBlock {Get-ISEGitBranch} -Key $null
+Add-GitMenuItem -DisplayName 'Merge branch' -ScriptBlock {Merge-ISEGitBranch} -Key $null
 Add-GitMenuItem -DisplayName 'Remove branch' -ScriptBlock {Remove-ISEGitBranch} -Key $null
+Add-GitMenuItem -DisplayName 'Remove branch (forced)' -ScriptBlock {Remove-ISEGitBranch -Force} -Key $null
 
 Export-ModuleMember -Function * -Alias *
