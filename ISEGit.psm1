@@ -1,6 +1,10 @@
-if (-not ($Menu = $psISE.CurrentPowerShellTab.AddOnsMenu.Submenus | 
-    where { $_.DisplayName -eq 'ISEGit' })) {
-    $Menu = $psISE.CurrentPowerShellTab.AddOnsMenu.Submenus.Add('ISEGit', $null, $null)
+$isISE = $host.Name -eq 'Windows PowerShell ISE Host'
+
+if ($isISE) {
+    if (-not ($Menu = $psISE.CurrentPowerShellTab.AddOnsMenu.Submenus | 
+        Where-Object { $_.DisplayName -eq 'ISEGit' })) {
+        $Menu = $psISE.CurrentPowerShellTab.AddOnsMenu.Submenus.Add('ISEGit', $null, $null)
+    }
 }
 
 function Resolve-ISEPath {
@@ -13,7 +17,7 @@ param (
             $Path = '.'
         )
         Push-Location $Path
-        git status --porcelain 
+        git.exe status --porcelain 
         Pop-Location
     }
 
@@ -62,7 +66,7 @@ function Get-IseInput {
 [OutputType('System.String')]
 param (
     [string]$Prompt,
-    [string]$Title = "Enter data requested"
+    [string]$Title = 'Enter data requested'
 )
 
     # We are in ISE - so WPF is already "there"... ;)
@@ -103,7 +107,7 @@ param (
     [string]$Key
 )
 
-    if (-not ($Menu.Submenus | where { $_.DisplayName -eq $DisplayName })) {
+    if (-not ($Menu.Submenus | Where-Object { $_.DisplayName -eq $DisplayName }) -and $isISE) {
         try {
             $Menu.Submenus.Add(
                 $DisplayName,
@@ -131,8 +135,8 @@ function Checkpoint-ISEGitProject {
     $Data = Resolve-IsePath -Child
     if ($Data.Path) {
         $Message = Get-IseInput -Prompt (
-            "Please enter commit message. File(s): {0} Project: {1}" -f $Data.Name, $Data.Path
-        ) -Title "Commit message required!"
+            'Please enter commit message. File(s): {0} Project: {1}' -f $Data.Name, $Data.Path
+        ) -Title 'Commit message required!'
         Checkpoint-GitProject -Path $Data.Path -Name $Data.Name -Message $Message
     } 
 }
