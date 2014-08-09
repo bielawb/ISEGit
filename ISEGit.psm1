@@ -217,7 +217,7 @@ Add-GitMenuItem -DisplayName 'Merge branch' -ScriptBlock {Merge-ISEGitBranch} -K
 Add-GitMenuItem -DisplayName 'Remove branch' -ScriptBlock {Remove-ISEGitBranch} -Key $null
 Add-GitMenuItem -DisplayName 'Remove branch (forced)' -ScriptBlock {Remove-ISEGitBranch -Force} -Key $null
 Add-GitMenuItem -DisplayName Push -ScriptBlock {Push-ISEGitProject} -Key CTRL+SHIFT+P
-Add-GitMenuItem -DisplayName 'Enable prompt' -ScriptBlock {Enable-ISEGitPrompt} -Key $null
-Add-GitMenuItem -DisplayName 'Disable prompt' -ScriptBlock {Disable-ISEGitPrompt} -Key $null
+Add-GitMenuItem -DisplayName 'Enable prompt' -ScriptBlock {Enable-ISEGitPrompt} -Key CTRL+E
+Add-GitMenuItem -DisplayName 'Disable prompt' -ScriptBlock {Disable-ISEGitPrompt} -Key CTRL+SHIFT+E
 
 Export-ModuleMember -Function * -Alias *

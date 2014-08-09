@@ -1,10 +1,17 @@
-$CmdPath = (Resolve-Path -Path $env:USERPROFILE\AppData\Local\GitHub\*\cmd).ProviderPath
-$BinPath = (Resolve-Path -Path $env:USERPROFILE\AppData\Local\GitHub\*\bin).ProviderPath
-$GitHubPath = (Resolve-Path -Path $env:USERPROFILE\AppData\Local\Apps\*\*\*\gith*\github.exe |
+$cmdPath = (Resolve-Path -Path $env:USERPROFILE\AppData\Local\GitHub\*\cmd).ProviderPath
+$binPath = (Resolve-Path -Path $env:USERPROFILE\AppData\Local\GitHub\*\bin).ProviderPath
+$gitHubPath = (Resolve-Path -Path $env:USERPROFILE\AppData\Local\Apps\*\*\*\gith*\github.exe |
         Sort-Object { (Get-Item $_.ProviderPath).VersionInfo.FileVersion } -Descending |
         Select-Object -First 1).ProviderPath | Split-Path
+$poshGitModulePath = (Resolve-Path -Path $env:USERPROFILE\AppData\Local\GitHub\PoshGit_*\posh-git.psm1).ProviderPath
 
-$env:Path = "$CmdPath;$BinPath;$GitHubPath;$env:Path"
+Import-Module -Name $poshGitModulePath -Prefix v2
+
+function Write-GitPrompt {
+    Write-v2GitStatus (Get-v2GitStatus)
+}
+
+$env:Path = "$cmdPath;$binPath;$gitHubPath;$env:Path"
 
 function Get-GitStatus {
 [OutputType('Git.Status')]
@@ -60,9 +67,9 @@ param (
     }
 
 
-    & $status -Path $Path -ErrorAction SilentlyContinue -ErrorVariable GettingStatus |
+    & $status -Path $Path -ErrorAction SilentlyContinue -ErrorVariable gettingStatus |
         Convert-StatusToObject
-    if ($GettingStatus) {
+    if ($gettingStatus) {
     @'
 Couldn't check status for {0}: "{1}"
 '@ -f $Path, $BoundPath[0].Exception.Message | Write-Warning
@@ -110,18 +117,18 @@ param (
     }
 
     if ($Name) {
-        & $add -Name $Name -Path $Path -ErrorVariable Adding -ErrorAction SilentlyContinue
+        & $add -Name $Name -Path $Path -ErrorVariable adding -ErrorAction SilentlyContinue
     } else {
-        & $add -All -Path $Path -ErrorVariable Adding -ErrorAction SilentlyContinue
+        & $add -All -Path $Path -ErrorVariable adding -ErrorAction SilentlyContinue
     }
 
-    if ($Adding) {
+    if ($adding) {
         if ($All) {
             $Name = '*'
         }
         @'
 Couldn't add file(s): {0} to {1}: "{2}"
-'@ -f $Name, $Path, $Adding[0].Exception.Message | Write-Warning
+'@ -f $Name, $Path, $adding[0].Exception.Message | Write-Warning
     }
 
 }
@@ -175,23 +182,23 @@ param (
     }
 
     if (!$Message) {
-        Write-Warning "Need a message to commit!"
+        Write-Warning 'Need a message to commit!'
         return
     }
 
     if ($Name) {
-        & $commit -Name $Name -Path $Path -Message $Message -ErrorVariable Commiting -ErrorAction SilentlyContinue
+        & $commit -Name $Name -Path $Path -Message $Message -ErrorVariable commiting -ErrorAction SilentlyContinue
     } else {
-        & $commit -All -Path $Path -Message $Message -ErrorVariable Commiting -ErrorAction SilentlyContinue
+        & $commit -All -Path $Path -Message $Message -ErrorVariable commiting -ErrorAction SilentlyContinue
     }
 
-    if ($Commiting) {
+    if ($commiting) {
         if ($All) {
             $Name = '*'
         }
         @'
 Couldn't add file(s): {0} to {1}: "{2}"
-'@ -f $Name, $Path, $Commiting[0].Exception.Message | Write-Warning
+'@ -f $Name, $Path, $commiting[0].Exception.Message | Write-Warning
     }
 }
 
@@ -227,12 +234,12 @@ param (
         Pop-Location
     }
 
-    & $newbranch -Name $Name -Path $Path -ErrorVariable CreatingBranch -ErrorAction SilentlyContinue -CheckOut:$CheckOut
+    & $newbranch -Name $Name -Path $Path -ErrorVariable creatingBranch -ErrorAction SilentlyContinue -CheckOut:$CheckOut
 
-    if ($CreatingBranch) {
+    if ($creatingBranch) {
         @'
 Couldn't create new branch: {0} in {1}: "{2}"
-'@ -f $Name, $Path, $CreatingBranch[0].Exception.Message | Write-Warning
+'@ -f $Name, $Path, $creatingBranch[0].Exception.Message | Write-Warning
     }
 }
 
@@ -262,12 +269,12 @@ param (
         Pop-Location
     }
 
-    & $getbranch -Name $Name -Path $Path -ErrorVariable GettingBranch -ErrorAction SilentlyContinue
+    & $getbranch -Name $Name -Path $Path -ErrorVariable gettingBranch -ErrorAction SilentlyContinue
 
-    if ($GettingBranch) {
+    if ($gettingBranch) {
         @'
 Couldn't find branch: {0} in {1}: "{2}"
-'@ -f $Name, $Path, $GettingBranch[0].Exception.Message | Write-Warning
+'@ -f $Name, $Path, $gettingBranch[0].Exception.Message | Write-Warning
     }
 }
 
@@ -298,7 +305,7 @@ param (
         Pop-Location
     }
 
-    & $mergebranch -Name $Name -Path $Path -ErrorVariable MergingBranch -ErrorAction SilentlyContinue
+    & $mergebranch -Name $Name -Path $Path -ErrorVariable mergingBranch -ErrorAction SilentlyContinue
 
     if ($mergingBranch) {
         @'
@@ -343,12 +350,12 @@ param (
         Pop-Location
     }
 
-    & $removebranch -Name $Name -Path $Path -ErrorVariable RemovingBranch -ErrorAction SilentlyContinue -Force:$Force
+    & $removebranch -Name $Name -Path $Path -ErrorVariable removingBranch -ErrorAction SilentlyContinue -Force:$Force
 
-    if ($RemovingBranch) {
+    if ($removingBranch) {
         @'
 Couldn't remove branch: {0} in {1}: "{2}"
-'@ -f $Name, $Path, $RemovingBranch[0].Exception.Message | Write-Warning
+'@ -f $Name, $Path, $removingBranch[0].Exception.Message | Write-Warning
     }
 }
 
@@ -374,15 +381,15 @@ param (
         Pop-Location
     }
 
-    & $pushProject -Path $Path -ErrorVariable PushingProject -ErrorAction SilentlyContinue
+    & $pushProject -Path $Path -ErrorVariable pushingProject -ErrorAction SilentlyContinue
 
-    if ($PushingProject) {
+    if ($pushingProject) {
         @'
 Couldn't push project {1}: "{2}"
-'@ -f $Path, $PushingProject[0].Exception.Message | Write-Warning
+'@ -f $Path, $pushingProject[0].Exception.Message | Write-Warning
     }
 }
 
 New-Alias -Name Commit-GitProject -Value Checkpoint-GitProject
 
-Export-ModuleMember -Function * -Alias *
+Export-ModuleMember -Function *-Git* -Alias *
