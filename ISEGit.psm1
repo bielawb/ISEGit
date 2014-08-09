@@ -1,3 +1,9 @@
+# Needed for Enable/Disable-ISEGitPrompt
+$oldPrompt = Get-Content Function:\prompt
+$MyInvocation.MyCommand.ScriptBlock.Module.OnRemove = {
+    Set-Content Function:\prompt -Value $oldPrompt
+}
+
 $isISE = $host.Name -eq 'Windows PowerShell ISE Host'
 
 if ($isISE) {
@@ -186,6 +192,22 @@ function Push-ISEGitProject {
     }
 }
 
+function Enable-ISEGitPrompt {
+    function global:prompt {
+        Write-Host '<# ' -ForegroundColor Gray -NoNewline 
+        Write-GitPrompt
+        Write-host ' #>' -NoNewLine -ForegroundColor Gray
+        & ([scriptblock]::Create($oldPrompt))
+
+    }
+}
+
+function Disable-ISEGitPrompt {
+    function global:prompt {
+        & ([scriptblock]::Create($oldPrompt))    
+    }
+}
+
 Add-GitMenuItem -DisplayName Status -ScriptBlock {Get-ISEGitStatus} -Key CTRL+SHIFT+S
 Add-GitMenuItem -DisplayName Add -ScriptBlock {Add-ISEGitItem} -Key CTRL+SHIFT+A
 Add-GitMenuItem -DisplayName Commit -ScriptBlock {Checkpoint-ISEGitProject} -Key CTRL+SHIFT+C
@@ -195,5 +217,7 @@ Add-GitMenuItem -DisplayName 'Merge branch' -ScriptBlock {Merge-ISEGitBranch} -K
 Add-GitMenuItem -DisplayName 'Remove branch' -ScriptBlock {Remove-ISEGitBranch} -Key $null
 Add-GitMenuItem -DisplayName 'Remove branch (forced)' -ScriptBlock {Remove-ISEGitBranch -Force} -Key $null
 Add-GitMenuItem -DisplayName Push -ScriptBlock {Push-ISEGitProject} -Key CTRL+SHIFT+P
+Add-GitMenuItem -DisplayName 'Enable prompt' -ScriptBlock {Enable-ISEGitPrompt} -Key $null
+Add-GitMenuItem -DisplayName 'Disable prompt' -ScriptBlock {Disable-ISEGitPrompt} -Key $null
 
 Export-ModuleMember -Function * -Alias *
