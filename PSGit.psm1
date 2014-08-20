@@ -5,10 +5,49 @@ $gitHubPath = (Resolve-Path -Path $env:USERPROFILE\AppData\Local\Apps\*\*\*\gith
         Select-Object -First 1).ProviderPath | Split-Path
 $poshGitModulePath = (Resolve-Path -Path $env:USERPROFILE\AppData\Local\GitHub\PoshGit_*\posh-git.psm1).ProviderPath
 
-Import-Module -Name $poshGitModulePath -Prefix v2
+Import-Module -Name $poshGitModulePath -Prefix v2 -ErrorAction SilentlyContinue -ErrorVariable loadModule
 
 function Write-GitPrompt {
     Write-v2GitStatus (Get-v2GitStatus)
+}
+
+function Set-GitPrompt {
+param (
+    [ValidateSet('Dark', 'Light')]
+    [String]$Scheme
+)
+    if ($Scheme) {
+
+        $twoColors = [enum]::GetNames([System.ConsoleColor]) |
+            Group-Object { $_ -replace '^Dark' } -NoElement |
+            Where-Object { $_.Count -eq 2 } | ForEach-Object { $_.Name }
+
+        $replacer = @{}
+        if ($Scheme -eq 'Light') {
+            foreach ($color in $twoColors) {
+                $replacer.Add(
+                    "Dark$color",
+                    $color
+                )
+            }
+        } else {
+            foreach ($color in $twoColors) {
+                $replacer.Add(
+                    $color,
+                    "Dark$color"
+                )
+            }        
+        }
+
+        $foregroundColors = $GitPromptSettings.PSObject.Properties |
+            Where-Object { $_.Name -match 'Foreground' -and $replacer.Keys -contains $_.Value } |
+            ForEach-Object { $_.Name }     
+        
+        foreach ($color in $foregroundColors) {
+            $current = $GitPromptSettings.$color
+            $GitPromptSettings.$color = $replacer["$current"]
+        }
+    }
 }
 
 $env:Path = "$cmdPath;$binPath;$gitHubPath;$env:Path"
@@ -385,7 +424,7 @@ param (
 
     if ($pushingProject) {
         @'
-Couldn't push project {1}: "{2}"
+Couldn't push project {0}: "{1}"
 '@ -f $Path, $pushingProject[0].Exception.Message | Write-Warning
     }
 }
